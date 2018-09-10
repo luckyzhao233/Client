@@ -20,6 +20,8 @@ import java.net.Socket;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import static android.os.SystemClock.sleep;
+
 
 public class MainActivity extends AppCompatActivity {
 
@@ -143,7 +145,7 @@ public class MainActivity extends AppCompatActivity {
                         try {
 
                             // 创建Socket对象 & 指定服务端的IP 及 端口号
-                            socket = new Socket("192.168.254.134", 8080);
+                            socket = new Socket("192.168.254.162", 8080);
 
                             // 判断客户端和服务器是否连接成功
                             System.out.println(socket.isConnected());
@@ -155,8 +157,39 @@ public class MainActivity extends AppCompatActivity {
                     }
                 });
 
-                MyThread thread1 = new MyThread();
-                thread1.start();
+
+                mThreadPool.execute(new Runnable() {
+                    @Override
+                    public void run() {
+
+                        try {
+
+                            while (true) {
+                                sleep(100);
+
+                                // 步骤1：创建输入流对象InputStream
+                                is = socket.getInputStream();
+
+                                // 步骤2：创建输入流读取器对象 并传入输入流对象
+                                // 该对象作用：获取服务器返回的数据
+                                isr = new InputStreamReader(is);
+                                br = new BufferedReader(isr);
+
+                                // 步骤3：通过输入流读取器对象 接收服务器发送过来的数据
+                                response = br.readLine();
+
+                                // 步骤4:通知主线程,将接收的消息显示到界面
+                                Message msg = Message.obtain();
+                                msg.what = 0;
+                                mMainHandler.sendMessage(msg);
+
+                            }
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
+                    }
+                });
 
             }
         });
